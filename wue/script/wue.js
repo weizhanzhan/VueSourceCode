@@ -1,6 +1,10 @@
 function Wue (options){
   this._options = options
-  this._tmpNode = document.querySelector(options.el)
+
+  const dom = document.querySelector(options.el)
+  const vNode = getVNode(dom)
+  this._tmpNode = vNodeToDom(vNode)
+  
   this._data = typeof options.data == 'function'? options.data():options.data
   this._parentNode = this._tmpNode.parentNode
   this.render()
@@ -25,5 +29,6 @@ Wue.prototype.compiler = function(){
 
 Wue.prototype.update =function(generateNode){
   // 渲染新的模板
-  this._parentNode.replaceChild(generateNode,document.querySelector(this._options.el))
+  // this._parentNode.replaceChild(generateNode,document.querySelector(this._options.el))
+  document.body.replaceChild(generateNode,document.querySelector(this._options.el))
 }

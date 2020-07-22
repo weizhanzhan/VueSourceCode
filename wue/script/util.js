@@ -32,3 +32,74 @@ const compiler = function(tmpNode,target){
     }
   }
 }
+
+//虚拟dom
+
+class VNode{
+  constructor(tag,data,value,type){
+    this.tag = tag && tag.toLowerCase()
+    this.data = data
+    this.value = value
+    this.type = type
+    this.children = []
+  }
+  appendChild( vnode ){
+    this.children.push(vnode)
+  }
+}
+
+/**
+ * 使用递归来遍历dom元素 生成虚拟dom
+ * Vue使用的源码使用的栈结构 ，使用栈存储 父元素 来实现递归生成
+ */
+
+ function getVNode(node){
+  let nodeType = node.nodeType
+  let _vnode = null
+
+  if(nodeType ===1){//元素
+    let attrObj = {}
+    let attrs = node.attributes
+
+    for( let i =0;i<attrs.length;i++){
+      attrObj[attrs[i].nodeName] = attrs[i].nodeValue
+    }
+    _vnode = new VNode(node.tagName,attrObj,undefined,nodeType)
+
+    const childNodes = node.childNodes
+    
+    for(let j=0;j<childNodes.length;j++){
+      _vnode.children.push(getVNode(childNodes[j]))
+    }
+  } else if(nodeType===3){//文本
+    _vnode = new VNode(undefined,undefined,node.nodeValue,nodeType)
+  }
+  return _vnode
+ }
+ //虚拟dom转 真实dom
+ function vNodeToDom(vnode){
+   let _dom = null
+   if(vnode.type ===1){
+      _dom = document.createElement(vnode.tag)
+      if(vnode.data){
+        const attrsName = Object.keys(vnode.data)
+          for(let i =0;i<attrsName.length;i++){
+            const attr = attrsName[i]
+            _dom.setAttribute(attrsName[i],vnode.data[attrsName[i]])
+          }
+      
+        
+      }
+      const children = vnode.children
+      if(children&&children.length){
+        for(let j=0;j<children.length;j++){
+          const child = children[j]
+          _dom.appendChild(vNodeToDom(child))
+        }
+      }
+   }else if(vnode.type === 3){
+      _dom = document.createTextNode(vnode.value)
+   }
+   return _dom
+   
+ }
