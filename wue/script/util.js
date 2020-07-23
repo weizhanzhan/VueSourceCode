@@ -1,5 +1,7 @@
-const doubleBracketreg = /\{\{(.+?)\}\}/g; //双花括号正则验证
+//双花括号正则验证
+const doubleBracketreg = /\{\{(.+?)\}\}/g; 
 
+// 获取深层级的obj属性值
 const getKeyValue = function(target,key){
   if(!target || typeof target !== 'object') {
     console.warn('数据对象不存在')
@@ -77,7 +79,7 @@ class VNode{
   return _vnode
  }
  //虚拟dom转 真实dom
- function vNodeToDom(vnode){
+ function parseVNode(vnode){
    let _dom = null
    if(vnode.type ===1){
       _dom = document.createElement(vnode.tag)
@@ -94,7 +96,7 @@ class VNode{
       if(children&&children.length){
         for(let j=0;j<children.length;j++){
           const child = children[j]
-          _dom.appendChild(vNodeToDom(child))
+          _dom.appendChild(parseVNode(child))
         }
       }
    }else if(vnode.type === 3){
@@ -103,3 +105,32 @@ class VNode{
    return _dom
    
  }
+
+//蒋Vnode和data结合，转为带数据的Vode
+function combineVNodeWithData(vnode,data){
+  let _type = vnode.type
+  let _data = vnode.data
+  let _value = vnode.value
+  let _tag = vnode.tag
+  let _children = vnode.children
+
+  let _vnode = null
+
+  if(_type === 1 ){//元素节点
+
+    _vnode = new VNode(_tag,_data,_value,_type)
+
+    if(_children&&_children.length){
+      for(let i = 0; i<_children.length; i++){
+        _vnode.children.push(combineVNodeWithData(_children[i],data))
+      }
+    }
+  }else if( _type === 3){ //文本节点
+    let value = _value.trim()
+    value = value.replace(doubleBracketreg,(_,objKey)=>{
+      return getKeyValue(data,objKey)
+    })
+    _vnode = new VNode(_tag,_data,value,_type)
+  }
+  return _vnode
+}
