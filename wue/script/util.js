@@ -134,3 +134,68 @@ function combineVNodeWithData(vnode,data){
   }
   return _vnode
 }
+
+
+//数据响应式
+
+function defineReactive(target,key,value,enumerable){
+  
+  if(typeof value === 'object' && value !== null && !Array.isArray(value)){
+    reactify(value)
+  }
+  let _value = value
+  Object.defineProperty(target,key,{
+    enumerable:!!enumerable,
+    get(){ 
+      console.log('get',`${key}: ${_value}`)
+      return _value 
+    },
+    set(newValue){
+      console.log('set',`${key}: ${newValue}`)
+      _value = newValue
+    }
+  })
+
+}
+
+function reactify(obj){
+  const keys = Object.keys(obj)
+  for(let i = 0 ; i< keys.length ; i++) {
+    const key = keys[i]
+    const value = obj[key]
+
+    // 如果是数字就循环里面的每一个元素 去递归绑定响应式
+    // 如果不是数组 就直接绑定响应式，如果是obj则需要 递归子对象 并绑定响应式
+
+    if(Array.isArray(value)){
+      for (let index = 0; index < value.length; index++) {
+        const item = value[index];
+        if(Array.isArray(item)){
+          reactify(item)
+        }else if(typeof item !== 'object'){
+          defineReactive(value,index,item,true)
+        }else{
+          defineReactive(obj,key,value,true)
+        }
+        
+      }
+
+    }else{
+     
+      defineReactive(obj,key,value,true)
+
+    }
+  }
+
+}
+
+const o = {
+  name:'weizhan',
+  like:{
+    food:'apple'
+  },
+  class:[1,2,3,4],
+  cur:[{name:'chines'}]
+}
+reactify(o)
+console.log('defineProperty', o)

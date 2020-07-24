@@ -26,7 +26,7 @@ Wue.prototype.$mountComponent = function(){
 
 Wue.prototype.update =function(generateNode){
   // 渲染新的模板
-  this._parentNode.replaceChild(generateNode,this._template)
+  this._parentNode.replaceChild(generateNode,document.querySelector(this._options.el))
   // document.body.replaceChild(generateNode,document.querySelector(this._options.el))
 }
 
