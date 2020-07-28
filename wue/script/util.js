@@ -136,6 +136,36 @@ function combineVNodeWithData(vnode,data){
 }
 
 
+
+//扩展数组方法 来响应数组新加入的数据
+
+const ARRAY_METHODS = [
+  'push','pop','shift','unshift'
+]
+
+// let arr = []
+//     继承关系 :     arr -> Array.prototype -> Object.prototype -> ...
+// 改变继承关系 ：     arr -> 改写的方法 ->  Array.prototype -> Object.prototype -> ...
+
+let arr_method = Object.create(Array.prototype) //创建一个原型魏数组的对象
+console.log('arr_method', arr_method)
+ARRAY_METHODS.forEach(method =>{
+  //此时arr_method是一个空对象，原型为数组 ，重写的方法定义在对象上，没重写也可调用数组原型链上的方法 不冲突
+  arr_method[method] = function(){
+    console.log( '扩展',method,'方法')
+    //对数组新操作的对象 进行响应式话
+    reactify(arguments)
+    return Array.prototype[method].apply(this,arguments)
+  }
+})
+
+let arr = []
+// Vue源码做了判断 如果浏览器支持__proto__ 就执行
+// 如果不支持 ，vue使用的是混入法 就是直接挂在到对象的原型上
+arr.__proto__ = arr_method
+console.log('arr', arr.__proto__)
+console.log('arr_method', arr_method)
+
 //数据响应式
 
 function defineReactive(target,key,value,enumerable){
@@ -152,6 +182,9 @@ function defineReactive(target,key,value,enumerable){
     },
     set(newValue){
       console.log('set',`${key}: ${newValue}`)
+
+      //对新赋值的对象响应式话
+      reactify(newValue)
       _value = newValue
     }
   })
@@ -168,20 +201,15 @@ function reactify(obj){
     // 如果不是数组 就直接绑定响应式，如果是obj则需要 递归子对象 并绑定响应式
 
     if(Array.isArray(value)){
+      // 对操作的数组 扩展功能 新操作的对象 加入响应式话
+      value.__proto__ = arr_method
       for (let index = 0; index < value.length; index++) {
         const item = value[index];
-        if(Array.isArray(item)){
-          reactify(item)
-        }else if(typeof item !== 'object'){
-          defineReactive(value,index,item,true)
-        }else{
-          defineReactive(obj,key,value,true)
-        }
-        
+        reactify(item)
       }
 
     }else{
-     
+  
       defineReactive(obj,key,value,true)
 
     }
@@ -199,3 +227,4 @@ const o = {
 }
 reactify(o)
 console.log('defineProperty', o)
+
