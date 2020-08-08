@@ -55,3 +55,43 @@ p2 38
 扩展数组的push和pop如何处理？
 修改要进行响应式化的数组的原型（__proto__）
 还要考虑 对新赋值的数据 响应式
+
+
+
+## 解释proxy
+
+```js
+app._data.name
+
+// vue设计，不希望访问 _ 开头的数据
+// vue中的规则
+// _ 开头的是私有数据
+// $ 开头是只读数据
+```
+
+vue中不仅仅只有data属性 ，properties等等都会挂载到vue实例上
+
+proxy将属性映射到实例上 可以通过this访问到
+```js
+
+
+function porxy(app,prop,key){
+
+}
+Object.defineProperty(app,key,{
+  get(){
+    return app[prop][key]
+  },
+  set(newVal){
+    app[prop][key] = newVal
+  }
+})
+
+proxy(vm,'_data',属性名) //将_data成员映射到实例上
+proxy(vm,'_properties',属性名)//同理
+
+```
+
+# 发布订阅模式
+
+目标：解耦，让各个模块之间没有紧密联系
