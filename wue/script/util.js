@@ -217,6 +217,45 @@ function reactify(obj){
 
 }
 
+
+var event = (function(){
+  var eventObj = {}
+  return {
+    /**注册事件 */
+    on:function(type,handler){
+      (eventObj[type] || (eventObj[type] = [])).push(handler)
+      console.log('eventObj', eventObj)
+    },
+    /**移出事件 */
+    off:function(type,handler){
+      if(arguments.length===0){
+        eventObj ={}
+      }else if(arguments.length = 1){//只有事件的类型 移除该事件的所有函数
+        eventObj[type] = []
+
+      }else if(arguments.length = 2){//移除type事件的handler
+        let _event = eventObj[type]
+        if(!_event) return;
+        //倒着循环数组 序号不会受到影响
+        for(let i = _event.length ; i>=0 ;i--){
+          if(_event[i] === handler){
+            _event.splice(i,1)
+          }
+        }
+      }
+    },
+    /**发射事件 */
+    emit:function(type){
+      let args =Array.prototype.slice.call(arguments,1)//获取从argument的坐标1后面的参数
+      let _event = eventObj[type]
+      if(!_event) return;
+      for(let i =0 ;i <_event.length;i++){
+        _event[i].apply(null,args)
+      }
+    }
+  }
+}())
+
 const o = {
   name:'weizhan',
   like:{
