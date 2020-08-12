@@ -4,6 +4,8 @@ function Wue (options){
   this._parentNode = this._template.parentNode
   this._data = typeof options.data == 'function'? options.data():options.data
   reactify(this._data,this)
+
+  proxy(this,'_data',)
   this.$mount()
 }
 
