@@ -148,13 +148,16 @@ const ARRAY_METHODS = [
 // 改变继承关系 ：     arr -> 改写的方法 ->  Array.prototype -> Object.prototype -> ...
 
 let arr_method = Object.create(Array.prototype) //创建一个原型魏数组的对象
-console.log('arr_method', arr_method)
+
 ARRAY_METHODS.forEach(method =>{
   //此时arr_method是一个空对象，原型为数组 ，重写的方法定义在对象上，没重写也可调用数组原型链上的方法 不冲突
   arr_method[method] = function(){
     console.log( '扩展',method,'方法')
     //对数组新操作的对象 进行响应式话
-    reactify(arguments)
+
+    for(let i = 0; i<arguments.length ; i++){
+      reactify(arguments[i])
+    }
     return Array.prototype[method].apply(this,arguments)
   }
 })
@@ -163,8 +166,7 @@ let arr = []
 // Vue源码做了判断 如果浏览器支持__proto__ 就执行
 // 如果不支持 ，vue使用的是混入法 就是直接挂在到对象的原型上
 arr.__proto__ = arr_method
-console.log('arr', arr.__proto__)
-console.log('arr_method', arr_method)
+
 
 //数据响应式
 
@@ -173,25 +175,27 @@ function defineReactive(target,key,value,enumerable){
   if(typeof value === 'object' && value !== null && !Array.isArray(value)){
     reactify(value)
   }
+  let _this = this
   let _value = value
   Object.defineProperty(target,key,{
     enumerable:!!enumerable,
     get(){ 
-      console.log('get',`${key}: ${_value}`)
       return _value 
     },
     set(newValue){
-      console.log('set',`${key}: ${newValue}`)
-
       //对新赋值的对象响应式话
-      reactify(newValue)
+      typeof newValue === 'object' && reactify(newValue)
+
       _value = newValue
+
+      //模板刷新
+      _this.$mountComponent()
     }
   })
 
 }
 
-function reactify(obj){
+function reactify(obj,vm){
   const keys = Object.keys(obj)
   for(let i = 0 ; i< keys.length ; i++) {
     const key = keys[i]
@@ -205,16 +209,32 @@ function reactify(obj){
       value.__proto__ = arr_method
       for (let index = 0; index < value.length; index++) {
         const item = value[index];
-        reactify(item)
+        reactify(item,vm)
       }
 
     }else{
   
-      defineReactive(obj,key,value,true)
+      defineReactive.call(vm,obj,key,value,true)
 
     }
   }
 
+}
+
+/**
+ * 映射
+ * 将_data里的成员映射到实例上
+ */
+
+function proxy(app,prop,key){
+  Object.defineProperty(app,key,{
+    get(){
+      return app[prop][key]
+    },
+    set(newValue){
+      app[prop][key] = newValue
+    }
+  })
 }
 
 

@@ -3,7 +3,7 @@ function Wue (options){
   this._template = document.querySelector(options.el)
   this._parentNode = this._template.parentNode
   this._data = typeof options.data == 'function'? options.data():options.data
-  
+  reactify(this._data,this)
   this.$mount()
 }
 
